@@ -1,21 +1,32 @@
 import streamlit as st
-from services.redirect_services import check_redirect
+import pandas as pd
+from services import redirect_services
 
 def render():
     st.header("Redirect Link Checker")
 
-    # User input for URLs and target domain
-    urls_input = st.text_area("Masukkan URL (satu per baris):")
-    target_domain = st.text_input("Masukkan Target Domain:")
+    # Input links dari pengguna
+    link_input = st.text_area("Masukkan link (satu link per baris)", height=200)
+    target_domain = st.text_input("Masukkan target domain (contoh: telkomuniversity.ac.id)")
 
-    if st.button("Cek Redirect"):
-        urls = urls_input.splitlines()
-        results = []
-        for url in urls:
-            if url.strip():
-                result = check_redirect(url.strip(), target_domain)
-                results.append((url, "Redirect Benar" if result else "Redirect Salah"))
+    # Tombol untuk mulai memeriksa link
+    if st.button("Periksa Redirect"):
+        links = link_input.strip().splitlines()  # Memisahkan input menjadi list
+        if links and target_domain:
+            # Memanggil layanan untuk memeriksa redirect
+            results = redirect_services.check_backlinks(links, target_domain)
 
-        st.write("Hasil:")
-        for url, status in results:
-            st.write(f"{url}: {status}")
+            # Membuat DataFrame dari hasil
+            df = pd.DataFrame(results, columns=['Link', 'Status'])
+            df.index = df.index + 1  # Mengatur indeks agar dimulai dari 1
+
+            # Menampilkan tabel
+            st.table(df)
+
+            # Ekspor ke Excel
+            if st.button("Ekspor ke Excel"):
+                output_file_path = "redirect_results.xlsx"
+                df.to_excel(output_file_path, index=True)
+                st.success(f"Hasil telah diekspor ke {output_file_path}")
+        else:
+            st.warning("Silakan masukkan link dan target domain terlebih dahulu.")
