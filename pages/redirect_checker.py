@@ -19,9 +19,13 @@ def render():
             # Membuat DataFrame dari hasil
             df = pd.DataFrame(results, columns=['Link', 'Status'])
             df.index = df.index + 1  # Mengatur indeks agar dimulai dari 1
-
-            # Menampilkan tabel
-            st.table(df)
+            
+            # Menjadikan link dapat diklik menggunakan Markdown
+            df['Link'] = df['Link'].apply(lambda x: f"[{x}]({x})")
+            
+            # Tampilkan hasil dalam tabel dengan Markdown
+            st.markdown("### Hasil Pemeriksaan Redirect")
+            st.markdown(df.to_markdown(index=True), unsafe_allow_html=True)
 
             # Ekspor ke Excel
             if st.button("Ekspor ke Excel"):
